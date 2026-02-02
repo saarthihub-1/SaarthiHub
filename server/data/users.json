@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "1769101422674",
+    "createdAt": "2026-01-22T17:03:42.722Z",
+    "name": "shwet",
+    "email": "shwet0075@gmail.com",
+    "password": "$2a$10$uQCuVbxjfRnGui42DN1Hk.xnTBTWjDKHos8wVFrATpEvjRc6QnZLG",
+    "phone": "1111111111",
+    "role": "user",
+    "purchasedItems": [],
+    "bookmarks": [],
+    "predictorUsage": 0,
+    "studyStreak": 0
+  },
+  {
+    "_id": "1769925074136",
+    "createdAt": "2026-02-01T05:51:14.136Z",
+    "name": "API Verifier",
+    "email": "verifier@example.com",
+    "password": "$2a$10$zpONnTgkyzGf9Q0ty7UAJ.1..EHhF74bKp980Bco/kh5Z.O0sZ/vi",
+    "phone": "5555555555",
+    "role": "user",
+    "purchasedItems": [],
+    "bookmarks": [],
+    "predictorUsage": 0,
+    "studyStreak": 0
+  }
+]

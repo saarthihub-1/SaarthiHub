@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+dist
+build
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.idea
+.vscode
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# JSON Database (Optional - keep seeded data or ignore?)
+# We want to ignore runtime changes but maybe keep the structure.
+# For now, let's allow json files so the user has the 'database' when they clone.
+#server/data/* 
