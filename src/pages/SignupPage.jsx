@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function SignupPage() {
-    const [step, setStep] = useState('form'); // 'form' or 'verify'
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -11,30 +10,10 @@ function SignupPage() {
         password: '',
         confirmPassword: '',
     });
-    const [otp, setOtp] = useState('');
-    const [demoOtp, setDemoOtp] = useState(''); // For demo display
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [resendTimer, setResendTimer] = useState(0);
-
-    const { initiateSignup, verifyEmailOTP, resendOTP, cancelVerification, pendingVerification } = useAuth();
+    const { signup: initiateSignup } = useAuth();
     const navigate = useNavigate();
-
-    // Check if there's pending verification
-    useEffect(() => {
-        if (pendingVerification) {
-            setStep('verify');
-            setFormData(prev => ({ ...prev, email: pendingVerification.email }));
-        }
-    }, [pendingVerification]);
-
-    // Resend timer countdown
-    useEffect(() => {
-        if (resendTimer > 0) {
-            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [resendTimer]);
 
     const handleChange = (e) => {
         setFormData({
@@ -68,54 +47,13 @@ function SignupPage() {
         setLoading(true);
 
         try {
-            const result = await initiateSignup(formData.name, formData.email, formData.phone, formData.password);
-            setDemoOtp(result.otp); // For demo - show OTP
-            setStep('verify');
-            setResendTimer(60);
+            await initiateSignup(formData.email, formData.password, formData.name, formData.phone);
+            navigate('/verify-email');
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleVerifyOTP = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (otp.length !== 6) {
-            setError('Please enter a valid 6-digit OTP');
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            await verifyEmailOTP(otp);
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleResendOTP = async () => {
-        setError('');
-        try {
-            const result = await resendOTP();
-            setDemoOtp(result.otp);
-            setResendTimer(60);
-        } catch (err) {
-            setError(err.message);
-        }
-    };
-
-    const handleCancel = () => {
-        cancelVerification();
-        setStep('form');
-        setOtp('');
-        setDemoOtp('');
     };
 
     const getPasswordStrength = () => {
@@ -136,133 +74,6 @@ function SignupPage() {
     };
 
     const passwordStrength = getPasswordStrength();
-
-    // OTP Verification Step
-    if (step === 'verify') {
-        return (
-            <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="container container-sm">
-                    <div className="card animate-fade-in-up" style={{ padding: 'var(--space-2xl)' }}>
-                        <div className="text-center mb-xl">
-                            <div style={{ fontSize: '4rem', marginBottom: 'var(--space-md)' }}>📧</div>
-                            <h1 style={{ fontSize: 'var(--font-size-2xl)' }}>
-                                Verify Your Email
-                            </h1>
-                            <p className="text-secondary mt-sm">
-                                We've sent a 6-digit OTP to <strong>{pendingVerification?.email || formData.email}</strong>
-                            </p>
-                        </div>
-
-                        {/* Demo OTP Display */}
-                        {demoOtp && (
-                            <div
-                                className="alert alert-info mb-lg"
-                                style={{ textAlign: 'center' }}
-                            >
-                                <div>
-                                    <strong>Demo Mode:</strong> Your OTP is <span style={{
-                                        fontSize: 'var(--font-size-xl)',
-                                        fontWeight: 800,
-                                        letterSpacing: '3px',
-                                        color: 'var(--accent)'
-                                    }}>{demoOtp}</span>
-                                </div>
-                                <p style={{ fontSize: 'var(--font-size-sm)', marginTop: 'var(--space-sm)', marginBottom: 0 }}>
-                                    (In production, this would be sent to your email)
-                                </p>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="alert alert-danger mb-lg">
-                                <span>⚠️</span>
-                                <span>{error}</span>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleVerifyOTP}>
-                            <div className="form-group">
-                                <label className="form-label text-center" style={{ display: 'block' }}>
-                                    Enter OTP
-                                </label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="Enter 6-digit OTP"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    maxLength={6}
-                                    style={{
-                                        fontSize: 'var(--font-size-2xl)',
-                                        textAlign: 'center',
-                                        letterSpacing: '10px',
-                                        fontWeight: 700
-                                    }}
-                                    required
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="btn btn-primary w-full btn-lg"
-                                disabled={loading || otp.length !== 6}
-                            >
-                                {loading ? (
-                                    <>
-                                        <span className="spinner" style={{ width: 16, height: 16 }}></span>
-                                        Verifying...
-                                    </>
-                                ) : (
-                                    '✓ Verify Email'
-                                )}
-                            </button>
-                        </form>
-
-                        <div className="text-center mt-xl">
-                            <p className="text-secondary mb-md">
-                                Didn't receive the OTP?
-                            </p>
-                            {resendTimer > 0 ? (
-                                <p className="text-muted">
-                                    Resend OTP in <strong>{resendTimer}s</strong>
-                                </p>
-                            ) : (
-                                <button
-                                    className="btn btn-outline"
-                                    onClick={handleResendOTP}
-                                >
-                                    Resend OTP
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="text-center mt-lg">
-                            <button
-                                className="text-muted"
-                                onClick={handleCancel}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                            >
-                                ← Back to Sign Up
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Background decoration */}
-                <div style={{
-                    position: 'fixed',
-                    top: '20%',
-                    left: '10%',
-                    width: '300px',
-                    height: '300px',
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    pointerEvents: 'none',
-                    zIndex: -1,
-                }} />
-            </div>
-        );
-    }
 
     // Sign Up Form Step
     return (
@@ -393,10 +204,10 @@ function SignupPage() {
                             {loading ? (
                                 <>
                                     <span className="spinner" style={{ width: 16, height: 16 }}></span>
-                                    Sending verification code...
+                                    Creating Account...
                                 </>
                             ) : (
-                                'Continue → Verify Email'
+                                'Create Account'
                             )}
                         </button>
                     </form>

@@ -74,7 +74,7 @@ function Navbar() {
                     {user ? (
                         <>
                             <Link to="/profile" className="btn btn-secondary btn-sm desktop-only">
-                                👤 {user.name.split(' ')[0]}
+                                👤 {(user.name || user.email || 'User').split(' ')[0]}
                             </Link>
                             <button onClick={handleLogout} className="btn btn-outline btn-sm">
                                 Logout

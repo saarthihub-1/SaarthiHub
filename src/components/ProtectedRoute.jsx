@@ -10,6 +10,11 @@ function ProtectedRoute({ children, requirePurchase = null }) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    // Check if email is verified (skip for verify-email page itself)
+    if (!user.emailVerified && location.pathname !== '/verify-email') {
+        return <Navigate to="/verify-email" replace />;
+    }
+
     // Check if purchase is required
     if (requirePurchase && !hasPurchased(requirePurchase)) {
         return <Navigate to={`/product/${requirePurchase}`} replace />;

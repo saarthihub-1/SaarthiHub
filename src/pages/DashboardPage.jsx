@@ -81,7 +81,7 @@ function DashboardPage() {
                     <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 'var(--space-lg)' }}>
                         <div>
                             <h1 style={{ marginBottom: 'var(--space-sm)' }}>
-                                Welcome back, <span className="gradient-text">{user.name.split(' ')[0]}!</span> 👋
+                                Welcome back, <span className="gradient-text">{(user.name || user.email || 'User').split(' ')[0]}!</span> 👋
                             </h1>
                             <p className="text-secondary" style={{ marginBottom: 0 }}>
                                 Keep up the great work on your preparation journey.
@@ -89,7 +89,7 @@ function DashboardPage() {
                         </div>
                         <div className="streak-badge animate-pulse">
                             <span className="streak-fire">🔥</span>
-                            <span>{user.studyStreak} Day Streak!</span>
+                            <span>{user.studyStreak || 0} Day Streak!</span>
                         </div>
                     </div>
                 </div>

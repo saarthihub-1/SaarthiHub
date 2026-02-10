@@ -1,5 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/api';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification
+} from 'firebase/auth';
+import { auth } from '../firebase';
+import { firestoreService } from '../services/firestore';
 
 const AuthContext = createContext(null);
 
@@ -7,115 +15,101 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [purchases, setPurchases] = useState([]); // Store purchased product IDs
 
-  // Load user on mount
+  // Listen to Firebase Auth state changes
   useEffect(() => {
-    const loadUser = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
         try {
-          const userData = await authService.getMe();
-          setUser(userData);
+          // Get additional user data from Firestore
+          const profile = await firestoreService.getUserProfile(firebaseUser.uid);
+          const userPurchases = await firestoreService.getUserPurchases(firebaseUser.uid);
+
+          setUser({
+            ...profile,
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            emailVerified: firebaseUser.emailVerified
+            // Note: Password is NOT stored in user object here for security
+          });
+
+          setPurchases(userPurchases.map(p => p.productId));
         } catch (err) {
-          console.error('Failed to load user', err);
-          localStorage.removeItem('token');
-          setUser(null);
+          console.error("Error fetching user profile", err);
+          // Fallback if firestore fails
+          setUser({ uid: firebaseUser.uid, email: firebaseUser.email });
         }
+      } else {
+        setUser(null);
+        setPurchases([]);
       }
       setLoading(false);
-    };
-    loadUser();
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const initiateSignup = async (name, email, phone, password) => {
-    // In a real app with email verification, we might start a flow here.
-    // For now, with the basic backend, we'll map this directly to signup 
-    // OR simulate the OTP flow client-side but call the backend only on final verification?
-    // The current backend `registerUser` creates the user immediately. 
-    // To keep the OTP flow from Phase 1, we can keep the local OTP logic 
-    // and call `authService.signup` ONLY when OTP is verified.
-
-    // Check if user already exists (optional, depends on API)
-    // For now, let's keep the client-side OTP simulation from Phase 1
-    // and only hit the backend when `verifyEmailOTP` is called.
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const pendingUser = {
-      name, email, phone, password, otp,
-      otpExpiry: Date.now() + 10 * 60 * 1000
-    };
-
-    // Store temporarily in state/localstorage? for now using state/return is tricky with page reloads.
-    // Let's use localStorage for the pending verification like before.
-    localStorage.setItem('jee_prep_pending_verification', JSON.stringify(pendingUser));
-
-    console.log(`📧 DEMO OTP for ${email}: ${otp}`);
-    return { email, otp };
-  };
-
-  const verifyEmailOTP = async (inputOTP) => {
-    const pendingStr = localStorage.getItem('jee_prep_pending_verification');
-    if (!pendingStr) throw new Error("No pending signup found");
-
-    const pendingUser = JSON.parse(pendingStr);
-    if (inputOTP !== pendingUser.otp) throw new Error("Invalid OTP");
-
-    // Now call backend to create user
+  const signup = async (email, password, name, phone) => {
     try {
-      const newUser = await authService.signup({
-        name: pendingUser.name,
-        email: pendingUser.email,
-        phone: pendingUser.phone,
-        password: pendingUser.password
-      });
+      setError(null);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
 
-      setUser(newUser);
-      localStorage.removeItem('jee_prep_pending_verification');
-      return newUser;
+      // Create Firestore profile
+      const userData = {
+        name,
+        email,
+        phone,
+        emailVerified: false
+      };
+
+      await firestoreService.createUserProfile(firebaseUser.uid, userData);
+
+      // Send verification email
+      await sendEmailVerification(firebaseUser);
+
+      return firebaseUser;
     } catch (err) {
-      throw new Error(err.response?.data?.message || 'Signup failed');
+      setError(err.message);
+      throw err;
     }
   };
 
   const login = async (email, password) => {
     try {
-      const userData = await authService.login(email, password);
-      setUser(userData);
-      return userData;
+      setError(null);
+      return await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      throw new Error(err.response?.data?.message || 'Login failed');
+      setError(err.message);
+      throw err;
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
   };
 
-  // Helper getters for UI compatibility
-  const hasPurchased = (itemId) => user?.purchasedItems?.some(item => item.productId === itemId) || false;
+  const refreshPurchases = async () => {
+    if (user?.uid) {
+      const userPurchases = await firestoreService.getUserPurchases(user.uid);
+      setPurchases(userPurchases.map(p => p.productId));
+    }
+  };
+
+  // Helper getters
+  const hasPurchased = (itemId) => purchases.includes(itemId);
+
+  // Note: Bookmarks/Predictor usage logic ideally moves to Firestore too.
+  // We can implement simple local optimistic UI or read from user profile if we synced it.
   const isBookmarked = (itemId) => user?.bookmarks?.includes(itemId) || false;
+
   const canUsePredictor = () => (user?.predictorUsage || 0) < 3;
   const getRemainingPredictorUses = () => Math.max(0, 3 - (user?.predictorUsage || 0));
-
-  // These update functions now need to call backend APIs ideally.
-  // BUT, we didn't implement specialized APIs for bookmarks/ratings yet in Phase 2 plan.
-  // We implemented payment verification which updates purchases.
-  // For other updates, the backend logic inside `paymentController.verifyPayment` handles some of it.
-  // For bookmarks/activity, we might need new endpoints or just accept they won't persist to DB yet 
-  // without `userRoutes`. The Phase 2 plan didn't explicitly implement `userRoutes` for updates yet.
-  // I'll keep them as no-ops or local-state updates for now to prevent crashing, 
-  // but warn they won't persist to DB without `updateUser` endpoint.
-
-  // Actually, I should probably implement a generic updateUser in backend or just handle it client-side for now?
-  // No, client-side updates won't persist on refresh if we strictly load from `getMe`.
-  // Let's focus on the critical path: Auth + Purchases.
-
-  const updateUser = (updates) => {
-    // Temporary: Optimistic update
-    setUser(prev => ({ ...prev, ...updates }));
-    // TODO: Send to backend
-  };
 
   const value = {
     user,
@@ -123,26 +117,51 @@ export function AuthProvider({ children }) {
     error,
     login,
     logout,
-    initiateSignup,
-    verifyEmailOTP,
+    signup, // Firebase signup doesn't use the old 2-step OTP flow by default
     hasPurchased,
     isBookmarked,
     canUsePredictor,
     getRemainingPredictorUses,
-    usePredictor: () => {
-      if (user) {
-        updateUser({ predictorUsage: (user.predictorUsage || 0) + 1 });
+    refreshPurchases,
+    // Methods to be updated for Firestore usage
+    usePredictor: async () => {
+      if (user?.uid) {
+        await firestoreService.incrementPredictorUsage(user.uid);
+        // Refresh profile to update UI
+        const profile = await firestoreService.getUserProfile(user.uid);
+        setUser(prev => ({ ...prev, ...profile }));
       }
     },
-    // Keep these for compatibility but they might not persist to DB yet
-    updateUser, // Fallback
-    purchaseItem: () => { }, // Handled by payment flow
-    addPredictorCredits: () => { }, // Handled by payment flow
+    purchaseItem: async (productId) => {
+      // Optimistic update
+      if (user?.uid) {
+        // Real logic should happen after successful payment callback
+        // This is just a placeholder exposed helper
+      }
+    },
+    // Email verification helpers
+    resendVerificationEmail: async () => {
+      if (auth.currentUser && !auth.currentUser.emailVerified) {
+        await sendEmailVerification(auth.currentUser);
+      }
+    },
+    refreshUser: async () => {
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        const profile = await firestoreService.getUserProfile(auth.currentUser.uid);
+        setUser(prev => ({
+          ...prev,
+          ...profile,
+          emailVerified: auth.currentUser.emailVerified
+        }));
+      }
+    },
+    // Compatibility placeholders
+    initiateSignup: async () => { throw new Error("Please use standard signup"); },
+    verifyEmailOTP: async () => { /* Firebase handles verification if configured */ },
+    resendOTP: async () => { /* Firebase handles verification email */ },
+    cancelVerification: () => { },
     toggleBookmark: () => { },
-    setChapterRating: () => { },
-    addActivity: () => { },
-    resendOTP: async () => { /* implement if needed */ },
-    cancelVerification: () => localStorage.removeItem('jee_prep_pending_verification')
   };
 
   return (

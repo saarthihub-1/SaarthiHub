@@ -69,4 +69,38 @@ export const paymentService = {
     },
 };
 
+/**
+ * PCM Mindmaps Service
+ * Uses Firebase ID token for authentication (not localStorage JWT)
+ */
+export const pcmMindmapsService = {
+    /**
+     * Get signed PDF URLs for purchased PCM mindmaps
+     * @param {function} getIdToken - Function to get Firebase ID token (from auth.currentUser.getIdToken())
+     * @returns {Promise<{success: boolean, pdfs: Array<{pdfId: string, url: string}>, expiresIn: number}>}
+     */
+    getPdfUrls: async (getIdToken) => {
+        try {
+            const token = await getIdToken();
+            const response = await axios.get(`${API_URL}/pcm-mindmaps`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 403) {
+                return {
+                    success: false,
+                    requiresPurchase: true,
+                    message: error.response.data.message
+                };
+            }
+            throw error;
+        }
+    }
+};
+
 export default api;
+

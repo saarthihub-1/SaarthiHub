@@ -21,10 +21,12 @@ console.log('📦 Lite Mode: Using local JSON files for storage');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const pcmMindmapsRoutes = require('./routes/pcmMindmapsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/pcm-mindmaps', pcmMindmapsRoutes);
 
 app.get('/', (req, res) => {
     res.send('SaarthiHub API is running...');

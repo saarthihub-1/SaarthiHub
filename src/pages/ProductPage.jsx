@@ -230,16 +230,6 @@ function ProductPage() {
                                         marginBottom: 'var(--space-lg)',
                                     }}
                                 >
-                                    <div className="flex justify-between items-center mb-sm">
-                                        <span className="text-secondary">Price</span>
-                                        <span style={{
-                                            fontSize: 'var(--font-size-3xl)',
-                                            fontWeight: 800,
-                                            color: 'var(--success)'
-                                        }}>
-                                            ₹{mindmap.price}
-                                        </span>
-                                    </div>
                                     <p className="text-muted" style={{ fontSize: 'var(--font-size-sm)' }}>
                                         One-time purchase • Lifetime access
                                     </p>

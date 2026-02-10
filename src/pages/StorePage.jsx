@@ -139,7 +139,7 @@ function StorePage() {
 
                 {/* Price & Action */}
                 <div className="flex justify-between items-center mt-auto">
-                    <div>
+                    <div style={{ visibility: 'hidden' }}>
                         <span
                             style={{
                                 fontSize: 'var(--font-size-2xl)',
@@ -233,13 +233,7 @@ function StorePage() {
 
                 <div className="flex justify-between items-center">
                     <div>
-                        <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', marginRight: '8px' }}>
-                            ₹{bundle.price * 1.3 /* Fake original price since API doesn't send it yet */}
-                        </span>
-                        <span style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--success)' }}>
-                            ₹{bundle.price}
-                        </span>
-                        <span className="badge badge-success ml-sm">Most Popular</span>
+                        {/* Prices hidden as request */}
                     </div>
                     {bundlePurchased || allPurchased ? (
                         <span className="badge badge-success">✓ Owned</span>
@@ -325,32 +319,8 @@ function StorePage() {
                             ))}
                         </div>
 
-                        {/* Pricing */}
+                        {/* Pricing Hidden */}
                         <div className="flex justify-center items-center gap-lg mb-lg">
-                            <div>
-                                <span
-                                    style={{
-                                        textDecoration: 'line-through',
-                                        color: 'var(--text-muted)',
-                                        fontSize: 'var(--font-size-xl)'
-                                    }}
-                                >
-                                    ₹{completePack?.price * 1.5}
-                                </span>
-                            </div>
-                            <div>
-                                <span
-                                    style={{
-                                        fontSize: 'var(--font-size-4xl)',
-                                        fontWeight: 800,
-                                        background: 'var(--gradient-success)',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                    }}
-                                >
-                                    ₹{completePack?.price}
-                                </span>
-                            </div>
                             <span className="badge badge-success" style={{ fontSize: 'var(--font-size-md)', padding: '8px 16px' }}>
                                 Best Deal!
                             </span>
