@@ -1,6 +1,6 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-const { db, isInitialized } = require('../config/firebaseAdmin');
+const { db, isInitialized, admin } = require('../config/firebaseAdmin');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -96,27 +96,9 @@ const verifyPayment = async (req, res) => {
                     paidAt: new Date(),
                 });
 
-                // Record purchase for each item
+                // Process each item in the order
                 for (const item of orderData.items) {
-                    if (!item.title?.toLowerCase().includes('credits')) {
-                        // Record product purchase
-                        const existingPurchase = await db.collection('purchases')
-                            .where('userId', '==', req.user.uid)
-                            .where('productId', '==', item.productId)
-                            .get();
-
-                        if (existingPurchase.empty) {
-                            await db.collection('purchases').add({
-                                userId: req.user.uid,
-                                productId: item.productId,
-                                productName: item.title,
-                                amount: item.price,
-                                razorpayPaymentId: razorpay_payment_id,
-                                paid: true,
-                                purchasedAt: new Date(),
-                            });
-                        }
-                    }
+                    await processOrderItem(req.user.uid, item, razorpay_payment_id, orderData.totalAmount);
                 }
             }
         }
@@ -127,6 +109,80 @@ const verifyPayment = async (req, res) => {
         res.status(500).json({ message: 'Payment verification failed' });
     }
 };
+
+/**
+ * Process a single order item after payment verification.
+ * Handles: mindmaps, bundles (expand to individual items), credits
+ */
+async function processOrderItem(userId, item, razorpayPaymentId, amount) {
+    const productId = item.productId;
+
+    // Check if this is a credit purchase
+    if (productId.startsWith('credits-')) {
+        // Get credit amount from products collection
+        const productDoc = await db.collection('products').doc(productId).get();
+        const credits = productDoc.exists ? productDoc.data().credits : 0;
+
+        if (credits > 0) {
+            // Add credits to user profile
+            const userRef = db.collection('users').doc(userId);
+            await userRef.update({
+                predictorCredits: admin.firestore.FieldValue.increment(credits),
+            });
+            console.log(`✅ Added ${credits} predictor credits for user ${userId}`);
+        }
+
+        // Record purchase
+        await recordPurchaseIfNew(userId, productId, item.title, amount, razorpayPaymentId);
+        return;
+    }
+
+    // Check if this is a bundle
+    const productDoc = await db.collection('products').doc(productId).get();
+    if (productDoc.exists && productDoc.data().type === 'bundle') {
+        const bundleData = productDoc.data();
+        const includes = bundleData.includes || [];
+
+        // Record purchase for the bundle itself
+        await recordPurchaseIfNew(userId, productId, item.title, amount, razorpayPaymentId);
+
+        // Also record purchase for each individual item in the bundle
+        for (const includedId of includes) {
+            const includedDoc = await db.collection('products').doc(includedId).get();
+            const includedTitle = includedDoc.exists ? includedDoc.data().title : includedId;
+            await recordPurchaseIfNew(userId, includedId, includedTitle, 0, razorpayPaymentId);
+        }
+
+        console.log(`✅ Bundle ${productId} purchased - ${includes.length} items unlocked for user ${userId}`);
+        return;
+    }
+
+    // Regular mindmap purchase
+    await recordPurchaseIfNew(userId, productId, item.title, amount, razorpayPaymentId);
+    console.log(`✅ Product ${productId} purchased for user ${userId}`);
+}
+
+/**
+ * Record a purchase in Firestore if it doesn't already exist
+ */
+async function recordPurchaseIfNew(userId, productId, productName, amount, razorpayPaymentId) {
+    const existingPurchase = await db.collection('purchases')
+        .where('userId', '==', userId)
+        .where('productId', '==', productId)
+        .get();
+
+    if (existingPurchase.empty) {
+        await db.collection('purchases').add({
+            userId,
+            productId,
+            productName: productName || productId,
+            amount,
+            razorpayPaymentId,
+            paid: true,
+            purchasedAt: new Date(),
+        });
+    }
+}
 
 module.exports = {
     createOrder,

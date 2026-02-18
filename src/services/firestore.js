@@ -84,5 +84,13 @@ export const firestoreService = {
         const q = query(collection(db, 'purchases'), where('userId', '==', uid));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => doc.data());
-    }
+    },
+
+    // Add predictor credits to user profile
+    addPredictorCredits: async (uid, credits) => {
+        const userRef = doc(db, 'users', uid);
+        await updateDoc(userRef, {
+            predictorCredits: increment(credits)
+        });
+    },
 };

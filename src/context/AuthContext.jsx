@@ -108,8 +108,9 @@ export function AuthProvider({ children }) {
   // We can implement simple local optimistic UI or read from user profile if we synced it.
   const isBookmarked = (itemId) => user?.bookmarks?.includes(itemId) || false;
 
-  const canUsePredictor = () => (user?.predictorUsage || 0) < 3;
-  const getRemainingPredictorUses = () => Math.max(0, 3 - (user?.predictorUsage || 0));
+  const FREE_PREDICTOR_USES = 3;
+  const canUsePredictor = () => (user?.predictorUsage || 0) < (FREE_PREDICTOR_USES + (user?.predictorCredits || 0));
+  const getRemainingPredictorUses = () => Math.max(0, (FREE_PREDICTOR_USES + (user?.predictorCredits || 0)) - (user?.predictorUsage || 0));
 
   const value = {
     user,
@@ -133,11 +134,15 @@ export function AuthProvider({ children }) {
       }
     },
     purchaseItem: async (productId) => {
-      // Optimistic update
-      if (user?.uid) {
-        // Real logic should happen after successful payment callback
-        // This is just a placeholder exposed helper
-      }
+      // Optimistic update - add productId to local purchases state
+      setPurchases(prev => prev.includes(productId) ? prev : [...prev, productId]);
+    },
+    addPredictorCredits: (credits) => {
+      // Optimistic update for credits
+      setUser(prev => ({
+        ...prev,
+        predictorCredits: (prev?.predictorCredits || 0) + credits
+      }));
     },
     // Email verification helpers
     resendVerificationEmail: async () => {

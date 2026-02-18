@@ -1,137 +1,190 @@
 [
   {
-    "id": "physics-low",
+    "id": "physics-low-weightage",
     "title": "Physics - Low Weightage Chapters",
-    "description": "Covers easy-kill topics like Units & Dimensions, KTG, etc.",
+    "description": "Complete mind maps for low weightage chapters including Units & Measurements, KTG, Thermal Properties of Matter, etc.",
     "price": 49,
     "type": "mindmap",
-    "subject": "Physics",
+    "subject": "physics",
     "chapters": [
-      "Units & Dimensions",
+      "Units & Measurements",
+      "Motion in a Straight Line",
+      "Thermal Properties of Matter",
       "Kinetic Theory of Gases",
-      "Properties of Solids"
-    ],
-    "isLocked": true
+      "Oscillations & Waves",
+      "Ray Optics",
+      "Communication Systems"
+    ]
   },
   {
-    "id": "chemistry-low",
-    "title": "Chemistry - Low Weightage Chapters",
-    "description": "Score easy marks with Surface Chemistry, Polymers, etc.",
-    "price": 49,
-    "type": "mindmap",
-    "subject": "Chemistry",
-    "chapters": [
-      "Surface Chemistry",
-      "Polymers",
-      "Chemistry in Everyday Life"
-    ],
-    "isLocked": true
-  },
-  {
-    "id": "maths-low",
-    "title": "Maths - Low Weightage Chapters",
-    "description": "Boost score with Statistics, Mathematical Reasoning, etc.",
-    "price": 49,
-    "type": "mindmap",
-    "subject": "Maths",
-    "chapters": [
-      "Statistics",
-      "Mathematical Reasoning",
-      "Heights and Distances"
-    ],
-    "isLocked": true
-  },
-  {
-    "id": "physics-high",
+    "id": "physics-high-weightage",
     "title": "Physics - High Weightage Chapters",
-    "description": "Master critical topics like Rotational Motion, Electrodynamics.",
+    "description": "Complete mind maps for high weightage chapters including Mechanics, Electrostatics, Current Electricity, Magnetism, and Modern Physics.",
     "price": 69,
     "type": "mindmap",
-    "subject": "Physics",
+    "subject": "physics",
     "chapters": [
+      "Laws of Motion & Friction",
+      "Work, Energy & Power",
       "Rotational Motion",
+      "Gravitation",
       "Electrostatics",
-      "Current Electricity"
-    ],
-    "isLocked": true
+      "Current Electricity",
+      "Magnetism & Moving Charges",
+      "Electromagnetic Induction",
+      "Atoms & Nuclei",
+      "Semiconductors"
+    ]
   },
   {
-    "id": "chemistry-high",
+    "id": "chemistry-low-weightage",
+    "title": "Chemistry - Low Weightage Chapters",
+    "description": "Complete mind maps for low weightage chapters including Environmental Chemistry, Surface Chemistry, Biomolecules, and Polymers.",
+    "price": 49,
+    "type": "mindmap",
+    "subject": "chemistry",
+    "chapters": [
+      "Environmental Chemistry",
+      "Chemistry in Everyday Life",
+      "Surface Chemistry",
+      "Biomolecules",
+      "Polymers",
+      "s-Block Elements",
+      "Hydrogen"
+    ]
+  },
+  {
+    "id": "chemistry-high-weightage",
     "title": "Chemistry - High Weightage Chapters",
-    "description": "Focus on Coordinate Compounds, Thermodynamics, etc.",
+    "description": "Complete mind maps for high weightage chapters including Organic Chemistry, Chemical Bonding, Thermodynamics, and Electrochemistry.",
     "price": 69,
     "type": "mindmap",
-    "subject": "Chemistry",
+    "subject": "chemistry",
     "chapters": [
-      "Coordination Compounds",
+      "Chemical Bonding & Molecular Structure",
       "Thermodynamics",
-      "Equilibrium"
-    ],
-    "isLocked": true
+      "Chemical Equilibrium",
+      "Electrochemistry",
+      "Chemical Kinetics",
+      "General Organic Chemistry",
+      "Hydrocarbons",
+      "Aldehydes, Ketones & Carboxylic Acids",
+      "Coordination Compounds",
+      "p-Block Elements"
+    ]
   },
   {
-    "id": "maths-high",
-    "title": "Maths - High Weightage Chapters",
-    "description": "Ace Calculus, Vectors, and 3D Geometry.",
+    "id": "mathematics-low-weightage",
+    "title": "Mathematics - Low Weightage Chapters",
+    "description": "Complete mind maps for low weightage chapters including Mathematical Reasoning, Statistics, Linear Programming, and Trigonometry.",
+    "price": 49,
+    "type": "mindmap",
+    "subject": "mathematics",
+    "chapters": [
+      "Sets & Relations",
+      "Mathematical Reasoning",
+      "Statistics",
+      "Linear Programming",
+      "Trigonometric Equations",
+      "Inverse Trigonometry",
+      "Mathematical Induction"
+    ]
+  },
+  {
+    "id": "mathematics-high-weightage",
+    "title": "Mathematics - High Weightage Chapters",
+    "description": "Complete mind maps for high weightage chapters including Calculus, Coordinate Geometry, Algebra, Vectors & 3D, and Probability.",
     "price": 69,
     "type": "mindmap",
-    "subject": "Maths",
+    "subject": "mathematics",
     "chapters": [
-      "Calculus",
-      "Vectors",
-      "3D Geometry"
-    ],
-    "isLocked": true
+      "Limits & Continuity",
+      "Differentiation",
+      "Application of Derivatives",
+      "Indefinite Integration",
+      "Definite Integration",
+      "Differential Equations",
+      "Coordinate Geometry",
+      "Complex Numbers",
+      "Matrices & Determinants",
+      "Probability",
+      "Vectors & 3D Geometry"
+    ]
   },
   {
     "id": "physics-bundle",
-    "title": "Physics Mastery Bundle",
-    "description": "Complete Physics Mind Maps (Low + High Weightage).",
+    "title": "Physics Complete Bundle",
+    "description": "Both Low & High Weightage Physics mind maps at discounted price.",
     "price": 99,
     "type": "bundle",
-    "subject": "Physics",
-    "isLocked": true
+    "subject": "physics",
+    "includes": [
+      "physics-low-weightage",
+      "physics-high-weightage"
+    ]
   },
   {
     "id": "chemistry-bundle",
-    "title": "Chemistry Mastery Bundle",
-    "description": "Complete Chemistry Mind Maps (Low + High Weightage).",
+    "title": "Chemistry Complete Bundle",
+    "description": "Both Low & High Weightage Chemistry mind maps at discounted price.",
     "price": 99,
     "type": "bundle",
-    "subject": "Chemistry",
-    "isLocked": true
+    "subject": "chemistry",
+    "includes": [
+      "chemistry-low-weightage",
+      "chemistry-high-weightage"
+    ]
   },
   {
-    "id": "maths-bundle",
-    "title": "Maths Mastery Bundle",
-    "description": "Complete Maths Mind Maps (Low + High Weightage).",
+    "id": "mathematics-bundle",
+    "title": "Mathematics Complete Bundle",
+    "description": "Both Low & High Weightage Mathematics mind maps at discounted price.",
     "price": 99,
     "type": "bundle",
-    "subject": "Maths",
-    "isLocked": true
+    "subject": "mathematics",
+    "includes": [
+      "mathematics-low-weightage",
+      "mathematics-high-weightage"
+    ]
   },
   {
     "id": "complete-pack",
     "title": "Complete JEE/CET Mind Map Pack",
-    "description": "All 3 Subjects. All Chapters. Maximum Value.",
+    "description": "All 6 mind maps (Physics + Chemistry + Mathematics) - Best Value!",
     "price": 249,
     "type": "bundle",
-    "isLocked": true
+    "subject": "all",
+    "includes": [
+      "physics-low-weightage",
+      "physics-high-weightage",
+      "chemistry-low-weightage",
+      "chemistry-high-weightage",
+      "mathematics-low-weightage",
+      "mathematics-high-weightage"
+    ]
+  },
+  {
+    "id": "credits-1",
+    "title": "1 Predictor Use",
+    "description": "Get 1 additional use of the Percentile Predictor.",
+    "price": 10,
+    "type": "credits",
+    "credits": 1
   },
   {
     "id": "credits-3",
-    "title": "3 Predictor Credits",
+    "title": "3 Predictor Uses",
     "description": "Get 3 additional uses of the Percentile Predictor.",
-    "price": 19,
+    "price": 25,
     "type": "credits",
-    "isLocked": false
+    "credits": 3
   },
   {
     "id": "credits-10",
-    "title": "10 Predictor Credits",
+    "title": "10 Predictor Uses",
     "description": "Get 10 additional uses of the Percentile Predictor.",
-    "price": 49,
+    "price": 50,
     "type": "credits",
-    "isLocked": false
+    "credits": 10
   }
 ]
