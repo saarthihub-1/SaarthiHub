@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { auth } from '../firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// VITE_API_URL should be the Railway backend base URL, e.g. https://saarthihub-production.up.railway.app
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = BASE_URL.replace(/\/+$/, '') + '/api';
 
 const api = axios.create({
     baseURL: API_URL,
