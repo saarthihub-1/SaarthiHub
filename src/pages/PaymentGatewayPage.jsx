@@ -4,10 +4,20 @@ import { useAuth } from '../context/AuthContext';
 import { paymentService } from '../services/api';
 import { firestoreService } from '../services/firestore';
 
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
+
 function PaymentGatewayPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { user, purchaseItem, addPredictorCredits } = useAuth(); // kept for optimistic updates if needed
+    const { user, purchaseItem, addPredictorCredits, refreshPurchases } = useAuth(); // kept for optimistic updates if needed
 
     const [paymentMethod, setPaymentMethod] = useState('razorpay');
     const [processing, setProcessing] = useState(false);
@@ -41,78 +51,88 @@ function PaymentGatewayPage() {
     }
 
     const handleRazorpayPayment = async () => {
-        setError('');
+        setError("");
         setProcessing(true);
 
-        // Check if Razorpay is loaded
-        if (typeof window.Razorpay === 'undefined') {
-            setError('Razorpay SDK failed to load. Please check your internet connection.');
-            setProcessing(false);
-            return;
+        // Check if Razorpay is already loaded (from index.html script tag)
+        if (!window.Razorpay) {
+            // Fallback: try loading dynamically
+            const loaded = await loadScript(
+                "https://checkout.razorpay.com/v1/checkout.js"
+            );
+
+            if (!loaded || !window.Razorpay) {
+                setError("Razorpay SDK failed to load. Please check your internet connection.");
+                setProcessing(false);
+                return;
+            }
         }
 
         try {
-            // 1. Create Order on Backend
+            // Create order from backend
             const orderData = await paymentService.createOrder({
                 amount,
-                currency: 'INR',
-                items: [{
-                    productId: productId,
-                    title: productName,
-                    price: amount
-                }]
+                currency: "INR",
+                items: [
+                    {
+                        productId,
+                        title: productName,
+                        price: amount,
+                    },
+                ],
             });
 
-            // 2. Initialize Razorpay
             const options = {
-                key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your actual key or env var
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ correct env usage
                 amount: orderData.amount,
                 currency: orderData.currency,
-                name: 'SaarthiHub',
+                name: "SaarthiHub",
                 description: productName,
-                image: '/logo.jpg',
-                order_id: orderData.id, // Order ID from backend
-                handler: async function (response) {
+                image: "/logo.jpg",
+                order_id: orderData.id,
+
+                handler: async (response) => {
                     try {
-                        // 3. Verify Payment on Backend
                         await paymentService.verifyPayment({
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
-                            order_id: orderData.orderId
                         });
 
                         handlePaymentSuccess(response);
-                    } catch (verifyError) {
-                        console.error('Payment Verification Failed:', verifyError);
-                        setError('Payment verification failed. It might take a few minutes to reflect.');
+                    } catch (err) {
+                        console.error(err);
+                        setError("Payment verification failed");
                         setProcessing(false);
                     }
                 },
+
                 prefill: {
                     name: user.name,
                     email: user.email,
-                    contact: user.phone || '',
+                    contact: user.phone || "",
                 },
+
                 notes: {
                     product_id: productId,
                     product_type: productType,
                 },
+
                 theme: {
-                    color: '#6366f1',
+                    color: "#6366f1",
                 },
+
                 modal: {
-                    ondismiss: function () {
-                        setProcessing(false);
-                    },
+                    ondismiss: () => setProcessing(false),
                 },
             };
 
             const razorpay = new window.Razorpay(options);
             razorpay.open();
+
         } catch (err) {
-            console.error('Payment Initialization Failed:', err);
-            setError('Failed to initiate payment. Please try again.');
+            console.error("Payment init failed:", err);
+            setError("Failed to initiate payment");
             setProcessing(false);
         }
     };
@@ -161,8 +181,8 @@ function PaymentGatewayPage() {
         } else {
             purchaseItem(productId, productName);
             if (user?.uid) {
-                // Force refresh context purchases from Firestore
-                // We need to expose refreshPurchases from AuthContext or rely on reload
+                // Refresh purchases from Firestore to reflect the backend-recorded purchase
+                await refreshPurchases();
             }
         }
 
