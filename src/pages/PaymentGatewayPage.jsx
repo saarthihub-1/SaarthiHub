@@ -132,7 +132,8 @@ function PaymentGatewayPage() {
 
         } catch (err) {
             console.error("Payment init failed:", err);
-            setError("Failed to initiate payment");
+            const msg = err.response?.data?.message || err.message || "Failed to initiate payment";
+            setError(msg);
             setProcessing(false);
         }
     };
