@@ -1,16 +1,16 @@
 import { useSearchParams, Link } from 'react-router-dom';
-import { getMindmapById, getBundleById } from '../data/mindmaps';
 
 function PaymentSuccessPage() {
     const [searchParams] = useSearchParams();
-    const type = searchParams.get('type');
-    const id = searchParams.get('id');
-    const product = searchParams.get('product'); // For direct product purchase
+    const type = searchParams.get('type') || 'mindmap';
+    const id = searchParams.get('id') || '';
+    const productName = searchParams.get('product') || '';
+    const amount = searchParams.get('amount') || '0';
+    const txn = searchParams.get('txn') || '';
+    const credits = searchParams.get('credits') || '0';
 
-    const productId = product || id;
-    const item = type === 'bundle'
-        ? getBundleById(productId)
-        : getMindmapById(productId);
+    const isCredits = type === 'credits';
+    const isBundle = type === 'bundle';
 
     return (
         <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -30,7 +30,9 @@ function PaymentSuccessPage() {
                             animation: 'pop 0.5s ease',
                         }}
                     >
-                        <span style={{ fontSize: '3rem' }}>✓</span>
+                        <span style={{ fontSize: '3rem' }}>
+                            {isCredits ? '🎟️' : '✓'}
+                        </span>
                     </div>
 
                     <h1 style={{ color: 'var(--success)', marginBottom: 'var(--space-md)' }}>
@@ -38,7 +40,12 @@ function PaymentSuccessPage() {
                     </h1>
 
                     <p className="text-secondary mb-xl">
-                        Thank you for your purchase. You now have full access to your content.
+                        {isCredits
+                            ? `${credits} predictor credit${credits !== '1' ? 's' : ''} added to your account!`
+                            : isBundle
+                                ? 'All mind maps in this bundle are now unlocked!'
+                                : 'You now have full access to your mind map.'
+                        }
                     </p>
 
                     {/* Order Details */}
@@ -50,33 +57,39 @@ function PaymentSuccessPage() {
                             textAlign: 'left',
                         }}
                     >
-                        <div className="flex justify-between mb-sm">
-                            <span className="text-muted">Order ID</span>
-                            <span>#{Date.now().toString().slice(-8)}</span>
-                        </div>
-                        {item && (
+                        {txn && (
                             <div className="flex justify-between mb-sm">
-                                <span className="text-muted">Product</span>
-                                <span>{type === 'bundle' ? item.name : item.title}</span>
+                                <span className="text-muted">Transaction ID</span>
+                                <span style={{ fontSize: 'var(--font-size-sm)', fontFamily: 'monospace' }}>
+                                    {txn}
+                                </span>
                             </div>
                         )}
+                        <div className="flex justify-between mb-sm">
+                            <span className="text-muted">Product</span>
+                            <span>{productName}</span>
+                        </div>
                         <div className="flex justify-between">
                             <span className="text-muted">Amount Paid</span>
                             <span className="text-success" style={{ fontWeight: 700 }}>
-                                ₹{item?.price || '—'}
+                                ₹{amount}
                             </span>
                         </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-md justify-center" style={{ flexWrap: 'wrap' }}>
-                        {productId && type !== 'bundle' ? (
-                            <Link to={`/viewer/${productId}`} className="btn btn-success btn-lg">
-                                View Mind Map →
+                        {isCredits ? (
+                            <Link to="/predictor" className="btn btn-success btn-lg">
+                                Use Predictor →
                             </Link>
-                        ) : (
+                        ) : isBundle ? (
                             <Link to="/dashboard" className="btn btn-success btn-lg">
                                 Go to Dashboard →
+                            </Link>
+                        ) : (
+                            <Link to={`/viewer/${id}`} className="btn btn-success btn-lg">
+                                View Mind Map →
                             </Link>
                         )}
                         <Link to="/store" className="btn btn-secondary btn-lg">
@@ -92,12 +105,12 @@ function PaymentSuccessPage() {
             </div>
 
             <style>{`
-        @keyframes pop {
-          0% { transform: scale(0); }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); }
-        }
-      `}</style>
+                @keyframes pop {
+                    0% { transform: scale(0); }
+                    50% { transform: scale(1.2); }
+                    100% { transform: scale(1); }
+                }
+            `}</style>
         </div>
     );
 }

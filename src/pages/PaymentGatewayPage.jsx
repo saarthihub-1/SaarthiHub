@@ -140,56 +140,46 @@ function PaymentGatewayPage() {
     };
 
     const handlePaymentSuccess = async (response) => {
-        // Process successful payment
-
-
-        // Record in Firestore
+        // Record purchase in Firestore from the frontend side
         try {
             if (user?.uid) {
                 if (productType === 'credits') {
-                    // Update credits in user profile
-                    // We need a transaction or increment helper in firestoreService
-                    // For now, simpler approach:
-                    // This part is tricky without backend transaction, but for MVP:
-                    for (let i = 0; i < credits; i++) {
-                        await firestoreService.incrementPredictorUsage(user.uid); // Wait, increment usage means used up? 
-                        // Ah, `incrementPredictorUsage` in firestore.js increments usage count (used + 1).
-                        // But here we are BUYING credits.
-                        // Logic in AuthContext was: canUsePredictor = usage < 3. 
-                        // To BUY credits, we should probably decrease usage count? Or increase "allowed limits"?
-                        // Let's assume we decrease usage count (give back free tries) or store "credits" separately.
-                        // For simplicity: decrease usage count by 'credits' amount? Or reset?
-                        // Better: add a 'credits' field in Firestore.
-                        // I'll skip credits logic perfection for now and focus on PDF purchase as requested.
-                    }
-                } else {
-                    // It's a mindmap or bundle
+                    // Add predictor credits to user profile
+                    await firestoreService.addPredictorCredits(user.uid, credits);
+                    // Also record the credit purchase
                     await firestoreService.recordPurchase(user.uid, productId, {
                         productName,
                         amount,
                         txnId: response.razorpay_payment_id || 'demo',
-                        type: productType
+                        type: 'credits',
+                        credits,
+                    });
+                } else {
+                    // Mindmap or bundle purchase
+                    await firestoreService.recordPurchase(user.uid, productId, {
+                        productName,
+                        amount,
+                        txnId: response.razorpay_payment_id || 'demo',
+                        type: productType,
                     });
                 }
             }
         } catch (err) {
-            console.error("Failed to record purchase in Firestore", err);
-            // Don't block UI success on this failure, but maybe show warning?
+            console.error("Failed to record purchase in Firestore:", err);
         }
 
-        // Optimistically update context to reflect purchase immediately
+        // Optimistically update context
         if (productType === 'credits') {
             addPredictorCredits(credits);
         } else {
-            purchaseItem(productId, productName);
+            purchaseItem(productId);
             if (user?.uid) {
-                // Refresh purchases from Firestore to reflect the backend-recorded purchase
                 await refreshPurchases();
             }
         }
 
         // Redirect to success page
-        navigate(`/payment-success?product=${encodeURIComponent(productName)}&amount=${amount}&txn=${response.razorpay_payment_id || 'demo'}&type=${productType}&id=${productId}`);
+        navigate(`/payment-success?product=${encodeURIComponent(productName)}&amount=${amount}&txn=${response.razorpay_payment_id || 'demo'}&type=${productType}&id=${productId}&credits=${credits}`);
     };
 
     return (
