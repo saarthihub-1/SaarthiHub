@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -6,7 +6,8 @@ import {
   onAuthStateChanged,
   sendEmailVerification
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { firestoreService } from '../services/firestore';
 
 const AuthContext = createContext(null);
@@ -161,12 +162,71 @@ export function AuthProvider({ children }) {
         }));
       }
     },
+    // Update user profile fields locally (and optionally in Firestore)
+    updateUser: async (updates) => {
+      if (user?.uid) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, updates);
+        } catch (err) {
+          console.error('Error updating user profile in Firestore:', err);
+        }
+      }
+      setUser(prev => ({ ...prev, ...updates }));
+    },
+    // Chapter rating: mark chapters as understood/revision/difficult
+    setChapterRating: async (mindmapId, rating) => {
+      const newRatings = { ...(user?.chapterRatings || {}), [mindmapId]: rating };
+      setUser(prev => ({ ...prev, chapterRatings: newRatings }));
+      if (user?.uid) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, { chapterRatings: newRatings });
+        } catch (err) {
+          console.error('Error saving chapter rating:', err);
+        }
+      }
+    },
+    // Activity logging
+    addActivity: async (type, message) => {
+      const activity = {
+        id: Date.now().toString(),
+        type,
+        message,
+        timestamp: new Date().toISOString(),
+      };
+      const updatedActivity = [activity, ...(user?.recentActivity || [])].slice(0, 20);
+      setUser(prev => ({ ...prev, recentActivity: updatedActivity }));
+      if (user?.uid) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, { recentActivity: updatedActivity });
+        } catch (err) {
+          console.error('Error saving activity:', err);
+        }
+      }
+    },
     // Compatibility placeholders
     initiateSignup: async () => { throw new Error("Please use standard signup"); },
     verifyEmailOTP: async () => { /* Firebase handles verification if configured */ },
     resendOTP: async () => { /* Firebase handles verification email */ },
     cancelVerification: () => { },
-    toggleBookmark: () => { },
+    toggleBookmark: async (mindmapId) => {
+      const bookmarks = user?.bookmarks || [];
+      const isCurrentlyBookmarked = bookmarks.includes(mindmapId);
+      const newBookmarks = isCurrentlyBookmarked
+        ? bookmarks.filter(id => id !== mindmapId)
+        : [...bookmarks, mindmapId];
+      setUser(prev => ({ ...prev, bookmarks: newBookmarks }));
+      if (user?.uid) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, { bookmarks: newBookmarks });
+        } catch (err) {
+          console.error('Error toggling bookmark:', err);
+        }
+      }
+    },
   };
 
   return (
