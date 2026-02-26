@@ -16,14 +16,14 @@ cloudinary.config({
  * @returns {string} Signed URL
  */
 const generateSignedUrl = (publicId, options = {}) => {
-    const expiresInSeconds = options.expiresInSeconds || 300; // 5 minutes default
-    const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
-
+    // PDFs are uploaded as image type with upload (public) access
+    // Convert to jpg pages for browser rendering
     return cloudinary.url(publicId, {
-        resource_type: 'raw',
-        type: 'private',
-        sign_url: true,
-        expires_at: expiresAt
+        resource_type: 'image',
+        type: 'upload',
+        format: 'jpg',         // Convert PDF to JPG for browser display
+        quality: 'auto:best',  // Best quality
+        flags: 'attachment:false',
     });
 };
 
