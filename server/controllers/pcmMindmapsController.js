@@ -2,11 +2,11 @@ const { db, isInitialized } = require('../config/firebaseAdmin');
 const { generateSignedUrlsForPdfs } = require('../config/cloudinaryConfig');
 
 /**
- * @desc    Get signed URLs for PCM Mindmaps PDFs
- * @route   GET /api/pcm-mindmaps
+ * @desc    Get signed URLs for a purchased product's PDFs
+ * @route   GET /api/pcm-mindmaps/:productId
  * @access  Private (requires Firebase auth + purchase verification)
  */
-const getPcmMindmaps = async (req, res) => {
+const getMindmapPdfs = async (req, res) => {
     // Check if Firebase is initialized
     if (!isInitialized || !db) {
         return res.status(503).json({
@@ -16,13 +16,21 @@ const getPcmMindmaps = async (req, res) => {
     }
 
     const uid = req.user.uid;
+    const productId = req.params.productId;
+
+    if (!productId) {
+        return res.status(400).json({
+            message: 'Product ID is required',
+            error: 'MISSING_PRODUCT_ID'
+        });
+    }
 
     try {
-        // Step 1: Check if user has purchased pcm-mindmaps
+        // Step 1: Check if user has purchased this product
         const purchasesRef = db.collection('purchases');
         const purchaseQuery = purchasesRef
             .where('userId', '==', uid)
-            .where('productId', '==', 'pcm-mindmaps');
+            .where('productId', '==', productId);
 
         const purchaseSnapshot = await purchaseQuery.get();
 
@@ -44,14 +52,14 @@ const getPcmMindmaps = async (req, res) => {
             });
         }
 
-        // Step 2: Get pdfIds from products/pcm-mindmaps document
-        const productRef = db.collection('products').doc('pcm-mindmaps');
+        // Step 2: Get pdfIds from products/{productId} document
+        const productRef = db.collection('products').doc(productId);
         const productSnapshot = await productRef.get();
 
         if (!productSnapshot.exists) {
-            console.error('Product document products/pcm-mindmaps not found');
-            return res.status(500).json({
-                message: 'Product configuration not found',
+            console.error(`Product document products/${productId} not found`);
+            return res.status(404).json({
+                message: 'Product not found',
                 error: 'PRODUCT_NOT_FOUND'
             });
         }
@@ -60,10 +68,16 @@ const getPcmMindmaps = async (req, res) => {
         const pdfIds = productData.pdfIds;
 
         if (!pdfIds || !Array.isArray(pdfIds) || pdfIds.length === 0) {
-            console.error('No pdfIds array in products/pcm-mindmaps document');
-            return res.status(500).json({
-                message: 'No PDFs configured for this product',
-                error: 'NO_PDFS_CONFIGURED'
+            // No PDFs configured yet — return empty array so frontend can show placeholder
+            return res.json({
+                success: true,
+                pdfs: [],
+                product: {
+                    id: productId,
+                    title: productData.title,
+                    chapters: productData.chapters || [],
+                },
+                expiresIn: 0
             });
         }
 
@@ -76,11 +90,16 @@ const getPcmMindmaps = async (req, res) => {
         res.json({
             success: true,
             pdfs: signedPdfs,
+            product: {
+                id: productId,
+                title: productData.title,
+                chapters: productData.chapters || [],
+            },
             expiresIn: 300 // Let frontend know URLs expire in 5 minutes
         });
 
     } catch (error) {
-        console.error('Error fetching PCM mindmaps:', error);
+        console.error(`Error fetching mindmap PDFs for ${productId}:`, error);
         res.status(500).json({
             message: 'Internal server error',
             error: 'SERVER_ERROR'
@@ -89,5 +108,5 @@ const getPcmMindmaps = async (req, res) => {
 };
 
 module.exports = {
-    getPcmMindmaps
+    getMindmapPdfs
 };

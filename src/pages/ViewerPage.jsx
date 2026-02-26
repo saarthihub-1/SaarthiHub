@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMindmapById, subjects } from '../data/mindmaps';
+import { pcmMindmapsService } from '../services/api';
 import Watermark from '../components/Watermark';
 
 function ViewerPage() {
@@ -11,8 +12,46 @@ function ViewerPage() {
 
     const [currentPage, setCurrentPage] = useState(0);
     const [showToolbar, setShowToolbar] = useState(true);
+    const [pdfPages, setPdfPages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(null);
+    const [productInfo, setProductInfo] = useState(null);
 
     const mindmap = getMindmapById(id);
+
+    // Fetch PDF URLs from the API
+    useEffect(() => {
+        const fetchPdfs = async () => {
+            if (!user || !id) return;
+
+            try {
+                setLoading(true);
+                setFetchError(null);
+                const data = await pcmMindmapsService.getPdfUrls(id);
+
+                if (data.success && data.pdfs && data.pdfs.length > 0) {
+                    setPdfPages(data.pdfs.map(p => p.url));
+                    setProductInfo(data.product);
+                } else if (data.success && (!data.pdfs || data.pdfs.length === 0)) {
+                    // No PDFs configured yet
+                    setPdfPages([]);
+                    setProductInfo(data.product);
+                } else if (data.requiresPurchase) {
+                    navigate(`/product/${id}`);
+                    return;
+                } else {
+                    setFetchError(data.message || 'Failed to load content');
+                }
+            } catch (err) {
+                console.error('Error fetching PDFs:', err);
+                setFetchError('Failed to load mind map content. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPdfs();
+    }, [id, user]);
 
     // Disable right-click
     useEffect(() => {
@@ -47,7 +86,7 @@ function ViewerPage() {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [currentPage]);
+    }, [currentPage, pdfPages]);
 
     if (!mindmap) {
         return (
@@ -78,7 +117,7 @@ function ViewerPage() {
     const rating = user.chapterRatings?.[mindmap.id];
 
     const nextPage = () => {
-        if (currentPage < mindmap.pages.length - 1) {
+        if (currentPage < pdfPages.length - 1) {
             setCurrentPage(currentPage + 1);
         }
     };
@@ -92,6 +131,87 @@ function ViewerPage() {
     const handleRating = (newRating) => {
         setChapterRating(mindmap.id, newRating);
     };
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="text-center">
+                    <div style={{ fontSize: '3rem', marginBottom: 'var(--space-lg)' }}>📄</div>
+                    <h2>Loading Mind Map...</h2>
+                    <p className="text-secondary">Preparing your content</p>
+                </div>
+            </div>
+        );
+    }
+
+    // No PDFs available yet
+    if (pdfPages.length === 0 && !fetchError) {
+        const chapters = productInfo?.chapters || mindmap.chapters || [];
+        return (
+            <div className="page">
+                <div className="container container-sm" style={{ paddingTop: 'var(--space-2xl)', paddingBottom: 'var(--space-2xl)' }}>
+                    <div className="card" style={{ textAlign: 'center', padding: 'var(--space-2xl)' }}>
+                        <div style={{ fontSize: '4rem', marginBottom: 'var(--space-lg)' }}>🚧</div>
+                        <h2 style={{ marginBottom: 'var(--space-md)' }}>Content Being Prepared</h2>
+                        <p className="text-secondary mb-xl">
+                            Your purchase of <strong>{mindmap.title}</strong> is confirmed!
+                            The mind map content is being finalized and will be available here shortly.
+                        </p>
+
+                        {chapters.length > 0 && (
+                            <div className="mb-xl" style={{ textAlign: 'left' }}>
+                                <h4 className="mb-md">📚 Chapters Included:</h4>
+                                <div className="flex gap-xs" style={{ flexWrap: 'wrap' }}>
+                                    {chapters.map((ch, i) => (
+                                        <span
+                                            key={i}
+                                            className="badge"
+                                            style={{ background: 'var(--bg-glass)', marginBottom: '4px' }}
+                                        >
+                                            {ch}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex gap-md justify-center">
+                            <Link to="/dashboard" className="btn btn-primary">
+                                ← Go to Dashboard
+                            </Link>
+                            <Link to="/store" className="btn btn-secondary">
+                                Browse Store
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (fetchError) {
+        return (
+            <div className="page">
+                <div className="container container-sm text-center" style={{ paddingTop: 'var(--space-2xl)' }}>
+                    <div className="card" style={{ padding: 'var(--space-2xl)' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: 'var(--space-lg)' }}>⚠️</div>
+                        <h2 style={{ marginBottom: 'var(--space-md)' }}>Something Went Wrong</h2>
+                        <p className="text-secondary mb-xl">{fetchError}</p>
+                        <div className="flex gap-md justify-center">
+                            <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                                Try Again
+                            </button>
+                            <Link to="/dashboard" className="btn btn-secondary">
+                                Go to Dashboard
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -158,7 +278,7 @@ function ViewerPage() {
             {/* Content */}
             <div className="viewer-content">
                 <img
-                    src={mindmap.pages[currentPage]}
+                    src={pdfPages[currentPage]}
                     alt={`Page ${currentPage + 1}`}
                     className="viewer-image"
                     draggable={false}
@@ -181,13 +301,13 @@ function ViewerPage() {
                         <span>Page</span>
                         <strong>{currentPage + 1}</strong>
                         <span>of</span>
-                        <strong>{mindmap.pages.length}</strong>
+                        <strong>{pdfPages.length}</strong>
                     </div>
 
                     <button
                         className="btn btn-secondary"
                         onClick={nextPage}
-                        disabled={currentPage === mindmap.pages.length - 1}
+                        disabled={currentPage === pdfPages.length - 1}
                     >
                         Next →
                     </button>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaarthiHub - Instagram Ad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .ig-post {
+            width: 1080px;
+            height: 1080px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 44px 56px 36px;
+            position: relative;
+        }
+
+        /* Top accent bar */
+        .ig-post::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #0d9488, #14b8a6, #0891b2);
+        }
+
+        /* Logo */
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .logo-section img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+        }
+
+        .logo-text .saarthi {
+            color: #1e293b;
+        }
+
+        .logo-text .hub {
+            color: #0d9488;
+        }
+
+        /* Headline */
+        .headline {
+            font-size: 38px;
+            font-weight: 900;
+            color: #1e293b;
+            text-align: center;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .headline .accent {
+            color: #0d9488;
+        }
+
+        .tagline {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        /* Divider */
+        .divider {
+            width: 60px;
+            height: 3px;
+            background: #0d9488;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+
+        /* Subjects row */
+        .subjects-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .subject-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 8px 18px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Features grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+            margin-bottom: 22px;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px 18px;
+            position: relative;
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-title {
+            color: #1e293b;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .feature-desc {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #059669;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .tag-orange {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        /* Pricing bar */
+        .pricing-bar {
+            width: 100%;
+            background: #f0fdfa;
+            border: 2px solid #99f6e4;
+            border-radius: 14px;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .pricing-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pricing-icon {
+            width: 44px;
+            height: 44px;
+            background: #ccfbf1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .pricing-label {
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .pricing-sub {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .pricing-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .old-price {
+            color: #94a3b8;
+            text-decoration: line-through;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .new-price {
+            color: #0d9488;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .save-tag {
+            background: #0d9488;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            text-align: center;
+            padding: 14px 8px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .stat-value {
+            color: #1e293b;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* CTA row */
+        .cta-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .cta-btn {
+            flex: 1;
+            text-align: center;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .cta-primary {
+            background: #0d9488;
+            color: white;
+        }
+
+        .cta-primary:hover {
+            background: #0f766e;
+        }
+
+        .cta-secondary {
+            background: white;
+            border: 2px solid #0d9488;
+            color: #0d9488;
+        }
+
+        /* URL bar */
+        .url-bar {
+            margin-top: auto;
+        }
+
+        .url-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0fdfa;
+            border: 1.5px solid #99f6e4;
+            border-radius: 50px;
+            padding: 10px 28px;
+            color: #0d9488;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 0.2px;
+        }
+
+        .url-pill:hover {
+            background: #ccfbf1;
+        }
+
+        .url-dot {
+            width: 8px;
+            height: 8px;
+            background: #0d9488;
+            border-radius: 50%;
+        }
+
+        /* Print-friendly: hide instructions when printing/screenshotting */
+        .instructions {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            z-index: 100;
+        }
+
+        .instructions strong {
+            color: #14b8a6;
+        }
+
+        @media print {
+            .instructions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="instructions">
+        💡 <strong>Right-click</strong> the post → <strong>Save image as</strong> or take a <strong>screenshot</strong>
+        (1080×1080)
+    </div>
+
+    <div class="ig-post">
+
+        <!-- Logo -->
+        <div class="logo-section">
+            <img src="logo.jpg" alt="SaarthiHub" />
+            <div class="logo-text">
+                <span class="saarthi">Saarthi</span><span class="hub">Hub</span>
+            </div>
+        </div>
+
+        <!-- Headline -->
+        <div class="headline">
+            Ace Your <span class="accent">JEE & CET</span> Exams
+        </div>
+        <div class="tagline">Mind maps, predictions & tracking — all in one place</div>
+        <div class="divider"></div>
+
+        <!-- Subjects -->
+        <div class="subjects-row">
+            <div class="subject-pill">⚛️ Physics</div>
+            <div class="subject-pill">🧪 Chemistry</div>
+            <div class="subject-pill">📐 Mathematics</div>
+        </div>
+
+        <!-- Features -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-title">Premium Mind Maps</div>
+                </div>
+                <div class="feature-desc">6 chapter-wise visual mind maps — Low & High Weightage. Buy once, access
+                    forever.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Percentile Predictor</div>
+                </div>
+                <div class="feature-desc">Enter marks → get instant JEE/CET percentile & expected rank prediction.</div>
+                <div class="tag">3 free uses</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Progress Tracking</div>
+                </div>
+                <div class="feature-desc">Study streaks, chapter ratings, activity feed & personalized recommendations.
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">AI Counselor</div>
+                </div>
+                <div class="feature-desc">Study tips, stress management, college selection & career guidance.</div>
+                <div class="tag tag-orange">Coming soon</div>
+            </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="pricing-bar">
+            <div class="pricing-left">
+                <div class="pricing-icon">🏆</div>
+                <div>
+                    <div class="pricing-label">Complete Mind Map Pack</div>
+                    <div class="pricing-sub">All 6 Maps — Physics + Chemistry + Maths</div>
+                </div>
+            </div>
+            <div class="pricing-right">
+                <span class="old-price">₹299</span>
+                <span class="new-price">₹249</span>
+                <span class="save-tag">SAVE ₹50</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Mind Maps</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Subjects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">₹49</div>
+                <div class="stat-label">Starting At</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Access</div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-row">
+            <a href="https://saarthihub.vercel.app/predictor" class="cta-btn cta-primary" target="_blank">🎯 Try
+                Predictor Free</a>
+            <a href="https://saarthihub.vercel.app/store" class="cta-btn cta-secondary" target="_blank">🛒 Browse Mind
+                Maps</a>
+        </div>
+
+        <!-- URL -->
+        <div class="url-bar">
+            <a href="https://saarthihub.vercel.app/" class="url-pill" target="_blank">
+                <span class="url-dot"></span>
+                saarthihub.vercel.app
+            </a>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

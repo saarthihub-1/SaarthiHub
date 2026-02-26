@@ -82,9 +82,9 @@ export const paymentService = {
  * Uses Firebase ID token for authentication (same as all other services now)
  */
 export const pcmMindmapsService = {
-    getPdfUrls: async () => {
+    getPdfUrls: async (productId) => {
         try {
-            const response = await api.get('/pcm-mindmaps');
+            const response = await api.get(`/pcm-mindmaps/${productId}`);
             return response.data;
         } catch (error) {
             if (error.response?.status === 403) {
@@ -92,6 +92,12 @@ export const pcmMindmapsService = {
                     success: false,
                     requiresPurchase: true,
                     message: error.response.data.message
+                };
+            }
+            if (error.response?.status === 404) {
+                return {
+                    success: false,
+                    message: 'Product not found'
                 };
             }
             throw error;
